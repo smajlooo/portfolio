@@ -6,8 +6,8 @@ This is the repository for my personal portfolio website, where I showcase my pr
 You can visit the live website here: https://www.smajlo.com
 
 ## 🛠️ Built With
-* 
-* 
+* HTML, CSS
+* Java Script
 * GitHub Pages (Hosting)
 
 ## 📌 Features
