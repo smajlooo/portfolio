@@ -9,10 +9,108 @@ import '../styles/global.css';
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
+		<title>smajlooo</title>
 	</head>
 	<body>
+		<svg class="web-menu" id="spiderWeb" viewBox="0 0 1920 1080" preserveAspectRatio="none">
+        </svg>
 
+		<script>
+			const svg = document.getElementById('spiderWeb');
+			
+			// HALBIERTE STRAHLEN: Nur 7 statt 14 für ein offenes, edles Design
+			const numRays = 7;       
+			const numRings = 9;     
+			const width = 1920;
+			const height = 1080;
+
+			// 1. STRAHLEN GENERIEREN (Lückenlos bis zum Rand)
+			const angles = [];
+			for (let i = 0; i < numRays; i++) {
+				const angle = (i / (numRays - 1)) * (Math.PI / 2);
+				angles.push(angle);
+
+				let x2 = width;
+				let y2 = height;
+				
+				if (Math.cos(angle) * height > Math.sin(angle) * width) {
+					x2 = width;
+					y2 = width * Math.tan(angle);
+				} else {
+					y2 = height;
+					x2 = height / Math.tan(angle);
+				}
+
+				const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+				line.setAttribute("class", "spider-line");
+				line.setAttribute("x1", "0");
+				line.setAttribute("y1", "0");
+				line.setAttribute("x2", x2);
+				line.setAttribute("y2", y2);
+				svg.appendChild(line);
+			}
+
+			// 2. PERFEKTE QUER-BÖGEN (Durchgehend ohne Aussetzer)
+			for (let r = 1; r <= numRings; r++) {
+				const radius = (width * 1.4) * (r / numRings); 
+				const isSubRing = r % 2 === 0; 
+
+				for (let i = 0; i < numRays - 1; i++) {
+					const a1 = angles[i];
+					const a2 = angles[i + 1];
+
+					const xStart = radius * Math.cos(a1);
+					const yStart = radius * Math.sin(a1);
+					const xEnd = radius * Math.cos(a2);
+					const yEnd = radius * Math.sin(a2);
+
+					// Kontrollpunkt für den perfekten, eleganten Durchhang
+					const midAngle = (a1 + a2) / 2;
+					const sagFactor = 0.88; 
+					const xCtrl = radius * Math.cos(midAngle) * sagFactor;
+					const yCtrl = radius * Math.sin(midAngle) * sagFactor;
+
+					const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+					path.setAttribute("class", isSubRing ? "spider-line sub" : "spider-line");
+					path.setAttribute("d", `M ${xStart},${yStart} Q ${xCtrl},${yCtrl} ${xEnd},${yEnd}`);
+					svg.appendChild(path);
+				}
+			}
+
+			// 3. MENÜ-PUNKTE (Auf die neuen, breiteren Kreuzungen angepasst)
+			const menuItems = [
+				{ text: "Home",      rayIndex: 2, ringIndex: 4, url: "home.html" },
+				{ text: "Über uns",  rayIndex: 3, ringIndex: 5, url: "ueber-uns.html" },
+				{ text: "Projekte",  rayIndex: 5, ringIndex: 4, url: "projekte.html" },
+				{ text: "Kontakt",   rayIndex: 1, ringIndex: 7, url: "kontakt.html" }
+			];
+
+			menuItems.forEach(item => {
+				const angle = angles[item.rayIndex];
+				const radius = (width * 1.4) * (item.ringIndex / numRings);
+				
+				const cx = radius * Math.cos(angle);
+				const cy = radius * Math.sin(angle);
+
+				const a = document.createElementNS("http://www.w3.org/2000/svg", "a");
+				a.setAttribute("href", item.url);
+				a.setAttribute("class", "menu-link");
+
+				const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+				circle.setAttribute("cx", cx);
+				circle.setAttribute("cy", cy);
+				circle.setAttribute("r", "5.5");
+
+				const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				text.setAttribute("x", cx);
+				text.setAttribute("y", cy - 25);
+				text.textContent = item.text;
+
+				a.appendChild(circle);
+				a.appendChild(text);
+				svg.appendChild(a);
+			});
+		</script>
 	</body>
 </html>
 
