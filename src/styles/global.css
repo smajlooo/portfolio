@@ -10,16 +10,26 @@ body {
     overflow: hidden;
 }
 
+#particleCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1; /* Hinter dem Menü */
+    pointer-events: none; /* Maus-Klicks gehen durch das Canvas durch zum Menü */
+}
+
+/* Dein Spinnennetz-Menü bleibt im Vordergrund */
 .web-menu {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 10;
+    z-index: 10; /* Vor dem Hintergrund */
 }
 
-/* Klare, durchgehende Linien */
 .spider-line {
     stroke: #ffffff;
     stroke-width: 2.2;
@@ -27,12 +37,6 @@ body {
     fill: none;
 }
 
-.spider-line.sub {
-    stroke-width: 1.2;
-    opacity: 0.25;
-}
-
-/* Menü-Links */
 .menu-link text {
     fill: #00ffcc;
     font-size: 16px;
@@ -40,9 +44,10 @@ body {
     cursor: pointer;
     transition: fill 0.3s, font-size 0.3s, filter 0.3s;
     text-anchor: middle;
+    dominant-baseline: middle;
     paint-order: stroke;
     stroke: #0a0f1d;
-    stroke-width: 5px;
+    stroke-width: 6px;
 }
 
 .menu-link:hover text {
@@ -50,17 +55,3 @@ body {
     font-size: 19px;
     filter: drop-shadow(0px 0px 8px #ff007f);
 }
-
-.menu-link circle {
-    fill: #ffffff;
-    stroke: #00ffcc;
-    stroke-width: 2;
-    transition: r 0.3s, fill 0.3s;
-}
-
-.menu-link:hover circle {
-    r: 9;
-    fill: #ff007f;
-    stroke: #ffffff;
-}
-    

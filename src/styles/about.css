@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at center, #2c4468 0%, #0d1627 70%, #050811 100%);
+    background-attachment: fixed;
+    overflow: hidden;
+}
+
+#particleCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1; /* Hinter dem Menü */
+    pointer-events: none; /* Maus-Klicks gehen durch das Canvas durch zum Menü */
+}
