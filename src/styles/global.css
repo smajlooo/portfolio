@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -16,18 +18,18 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 1; /* Hinter dem Menü */
-    pointer-events: none; /* Maus-Klicks gehen durch das Canvas durch zum Menü */
+    z-index: 1; /* Behind the menu */
+    pointer-events: none; /* Mouse clicks pass through the canvas to the menu */
 }
 
-/* Dein Spinnennetz-Menü bleibt im Vordergrund */
+/* Your spiderweb menu stays in the foreground */
 .web-menu {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 10; /* Vor dem Hintergrund */
+    z-index: 10; /* In front of the background */
 }
 
 .spider-line {
@@ -38,47 +40,36 @@ body {
 }
 
 .menu-link text {
-    fill: #00ffcc;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: fill 0.3s, font-size 0.3s, filter 0.3s;
-    text-anchor: middle;
-    dominant-baseline: middle;
-    paint-order: stroke;
-    stroke-width: 6px;
-}
-
-.menu-link:hover text {
-    fill: #ff007f;
-    font-size: 19px;
-    filter: drop-shadow(0px 0px 8px #ff007f);
-}
-
-.menu-link text {
     fill: #ffffff;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    font-size: 20px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 36px;                      
     font-weight: 500;
-    letter-spacing: 1px;
+    letter-spacing: 3px;                  
+    cursor: pointer;
+    
+    /* Perfect centering inside the SVG */
     text-anchor: middle;
     dominant-baseline: central;
-    transition: all 0.3s ease;
-    filter: drop-shadow(0px 0px 5px rgba(255, 255, 255, 0.6));
-    cursor: pointer;
+    
+    /* Subtle particle glow in default state */
+    filter: drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.4));
+    transition: all 0.25s ease-in-out;
 }
 
-/* Hover-Effekt: Text leuchtet stärker auf */
+/* Hover effect: Text lights up intensely in pure white */
 .menu-link:hover text {
-    fill: #ffffff;
-    filter: drop-shadow(0px 0px 12px rgba(255, 255, 255, 0.9)) drop-shadow(0px 0px 2px rgba(255, 255, 255, 1));
+    fill: #ffffff; 
+    font-weight: 700;
+    /* Strong, pure white glow */
+    filter: drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.9)) 
+            drop-shadow(0px 0px 15px rgba(255, 255, 255, 0.5));
 }
 
-/* Die Haltefäden für die Texte */
+/* The suspension lines for the text elements */
 .anchor-line {
     stroke: rgba(255, 255, 255, 0.25);
     stroke-width: 0.8;
-    stroke-dasharray: 2 1; /* Leicht gestrichelt für einen organischen Faser-Look */
+    stroke-dasharray: 2 1; /* Slightly dashed for an organic fiber look */
     transition: stroke 0.3s ease;
 }
 

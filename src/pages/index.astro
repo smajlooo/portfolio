@@ -3,23 +3,23 @@ import '../styles/global.css';
 ---
 
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>smajlooo</title>
-	</head>
-	<body>
-		<canvas id="particleCanvas"></canvas>
+    <head>
+        <meta charset="utf-8" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" href="/favicon.ico" />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="generator" content={Astro.generator} />
+        <title>smajlooo</title>
+    </head>
+    <body>
+        <canvas id="particleCanvas"></canvas>
 
-		<svg class="web-menu" id="spiderWeb" viewBox="0 0 1920 1080" preserveAspectRatio="none">
-			</svg>
+        <svg class="web-menu" id="spiderWeb" viewBox="0 0 1920 1080" preserveAspectRatio="none">
+        </svg>
 
         <script>
             // ==========================================
-            // 1. BASIS-BERECHNUNG DES SPINNENNETZES
+            // 1. BASE CALCULATION OF THE SPIDER WEB
             // ==========================================
             const svg = document.getElementById('spiderWeb');
             const numRays = 7;       
@@ -30,7 +30,7 @@ import '../styles/global.css';
             const angles = [];
             const trackPoints = []; 
 
-            // Strahlen generieren
+            // Generate rays
             for (let i = 0; i < numRays; i++) {
                 const angle = (i / (numRays - 1)) * (Math.PI / 2);
                 angles.push(angle);
@@ -63,10 +63,10 @@ import '../styles/global.css';
                 svg.appendChild(line);
             }
 
-            // Kreuzungspunkte (Intersections) für die Verankerung speichern
+            // Store intersection points for anchoring
             const intersections = [];
 
-            // Bögen generieren
+            // Generate rings
             for (let r = 1; r <= numRings; r++) {
                 const radius = (svgWidth * 1.4) * (r / numRings); 
                 intersections[r] = [];
@@ -114,13 +114,12 @@ import '../styles/global.css';
             }
 
             // ==========================================
-            // OPTION 1: DIAGONALE ZUORDNUNG MIT NETZ-FEINSCHLIFF
+            // OPTION 1: DIAGONAL ALIGNMENT (TEXT ONLY)
             // ==========================================
-            
             const menuItems = [
                 { text: "About",      rayStart: 0, ringStart: 2, url: "/about" },      
-                { text: "Projects",   rayStart: 2, ringStart: 2, url: "/projects" },   
-                { text: "Experience", rayStart: 1, ringStart: 2, url: "/experience" }, 
+                { text: "Projects",   rayStart: 1, ringStart: 2, url: "/projects" },   
+                { text: "Experience", rayStart: 2, ringStart: 2, url: "/experience" }, 
                 { text: "Tech Stack", rayStart: 3, ringStart: 2, url: "/tech-stack" }  
             ];
 
@@ -133,15 +132,12 @@ import '../styles/global.css';
                 const r2 = (svgWidth * 1.4) * ((item.ringStart + 1) / numRings);
                 const midRadius = (r1 + r2) / 2;
 
-                const visualRadius = midRadius * 0.85; 
+                // Perfectly balanced text position within the web cell
+                const visualRadius = midRadius * 0.96; 
                 const cx = visualRadius * Math.cos(midAngle);
                 const cy = visualRadius * Math.sin(midAngle);
 
-                const anchorGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                anchorGroup.setAttribute("class", "anchor-group");
-
-
-                // Link und Text (wird über den Fäden gerendert)
+                // Link and text element (without any suspension lines)
                 const a = document.createElementNS("http://www.w3.org/2000/svg", "a");
                 a.setAttribute("href", item.url);
                 a.setAttribute("class", "menu-link");
@@ -149,6 +145,7 @@ import '../styles/global.css';
                 const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 text.setAttribute("x", cx.toString());
                 text.setAttribute("y", cy.toString());
+                text.setAttribute("dominant-baseline", "central");
                 text.textContent = item.text;
 
                 a.appendChild(text);
@@ -156,7 +153,7 @@ import '../styles/global.css';
             });
 
             // ==========================================
-            // 2. ZEITLUPEN-DNA-HELIX-PHYSIK
+            // 2. SLOW-MOTION DNA HELIX PHYSICS
             // ==========================================
             const canvas = document.getElementById('particleCanvas');
             const ctx = canvas.getContext('2d');
@@ -280,8 +277,6 @@ import '../styles/global.css';
                 requestAnimationFrame(animate);
             }
             animate();
-		</script>
-	</body>
+        </script>
+    </body>
 </html>
-
-
