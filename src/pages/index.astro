@@ -60,6 +60,15 @@ import '../styles/global.css';
                 line.setAttribute("y1", "0");
                 line.setAttribute("x2", x2.toString());
                 line.setAttribute("y2", y2.toString());
+                
+                // --- WELCOME ANIMATION FOR RAYS ---
+                // Setup CSS variables for dynamic length calculation
+                const length = Math.sqrt(x2*x2 + y2*y2);
+                line.style.strokeDasharray = length.toString();
+                line.style.strokeDashoffset = length.toString();
+                line.style.animation = `weaveLine 1.4s cubic-bezier(0.25, 1, 0.5, 1) forwards`;
+                line.style.animationDelay = `${i * 0.08}s`; // Sequential fan-out effect
+                
                 svg.appendChild(line);
             }
 
@@ -109,10 +118,24 @@ import '../styles/global.css';
                     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                     path.setAttribute("class", "spider-line");
                     path.setAttribute("d", `M ${xStart},${yStart} Q ${xCtrl},${yCtrl} ${xEnd},${yEnd}`);
+                    
+                    // --- WELCOME ANIMATION FOR ARCHED RINGS ---
+                    // Approximate path length for the web segments
+                    const approxLength = Math.sqrt((xEnd - xStart)**2 + (yEnd - yStart)**2) * 1.2;
+                    path.style.strokeDasharray = approxLength.toString();
+                    path.style.strokeDashoffset = approxLength.toString();
+                    path.style.animation = `weaveLine 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards`;
+                    // Expands from inside out
+                    path.style.animationDelay = `${0.4 + (r * 0.15) + (i * 0.05)}s`;
+
                     svg.appendChild(path);
                 }
             }
 
+            // ==========================================
+            // OPTION 1: DIAGONAL ALIGNMENT (TEXT ONLY)
+            // ==========================================
+            
             // ==========================================
             // OPTION 1: DIAGONAL ALIGNMENT (TEXT ONLY)
             // ==========================================
@@ -123,7 +146,7 @@ import '../styles/global.css';
                 { text: "Tech Stack", rayStart: 3, ringStart: 2, url: "/tech-stack" }  
             ];
 
-            menuItems.forEach(item => {
+            menuItems.forEach((item, index) => {
                 const a1 = angles[item.rayStart];
                 const a2 = angles[item.rayStart + 1];
                 const midAngle = (a1 + a2) / 2;
@@ -132,12 +155,10 @@ import '../styles/global.css';
                 const r2 = (svgWidth * 1.4) * ((item.ringStart + 1) / numRings);
                 const midRadius = (r1 + r2) / 2;
 
-                // Perfectly balanced text position within the web cell
                 const visualRadius = midRadius * 0.96; 
                 const cx = visualRadius * Math.cos(midAngle);
                 const cy = visualRadius * Math.sin(midAngle);
 
-                // Link and text element (without any suspension lines)
                 const a = document.createElementNS("http://www.w3.org/2000/svg", "a");
                 a.setAttribute("href", item.url);
                 a.setAttribute("class", "menu-link");
@@ -148,9 +169,72 @@ import '../styles/global.css';
                 text.setAttribute("dominant-baseline", "central");
                 text.textContent = item.text;
 
+                // Welcome animation for menu items
+                text.style.opacity = "0";
+                text.style.transform = "scale(0.8)";
+                text.style.transformOrigin = `${cx}px ${cy}px`;
+                text.style.animation = `fadeInText 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards`;
+                text.style.animationDelay = `${1.2 + (index * 0.15)}s`;
+
                 a.appendChild(text);
                 svg.appendChild(a);
             });
+
+            // ==========================================
+            // NEW: SPIDERMAN WELCOME MESSAGE
+            // ==========================================
+            // Target the red marked area (Ray 1 to 2, outer ring)
+            const welcomeAngle1 = angles[1];
+            const welcomeAngle2 = angles[2];
+            // Exact mathematical center between Ray 1 and Ray 2
+            const welcomeMidAngle = (welcomeAngle1 + welcomeAngle2) / 2;
+
+            const welcomeR1 = (svgWidth * 1.4) * (3 / numRings);
+            const welcomeR2 = (svgWidth * 1.4) * (4 / numRings);
+            // Perfect radius center between Ring 3 and Ring 4
+            const welcomeMidRadius = (welcomeR1 + welcomeR2) / 2;
+
+            // Trigonometric alignment with balanced padding
+            const welcomeVisualRadius = welcomeMidRadius * 0.95;
+            const welcomeCx = welcomeVisualRadius * Math.cos(welcomeMidAngle);
+            const welcomeCy = welcomeVisualRadius * Math.sin(welcomeMidAngle);
+
+            // Container for the welcome text lines
+            const welcomeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            welcomeGroup.setAttribute("class", "welcome-message-group");
+
+            const lines = [
+                { text: "Welcome!", offset: -30, size: "28px", weight: "700" },
+                { text: "Just your friendly neighborhood", offset: 10, size: "18px", weight: "500" },
+                { text: "tech guy.", offset: 40, size: "18px", weight: "500" }
+            ];
+
+            lines.forEach((lineData) => {
+                const tNode = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                tNode.setAttribute("x", welcomeCx.toString());
+                tNode.setAttribute("y", (welcomeCy + lineData.offset).toString());
+                tNode.setAttribute("text-anchor", "middle");
+                tNode.setAttribute("dominant-baseline", "central");
+                tNode.textContent = lineData.text;
+                
+                tNode.style.fontFamily = "'Orbitron', sans-serif";
+                tNode.style.fontSize = lineData.size;
+                tNode.style.fontWeight = lineData.weight;
+                tNode.style.fill = "rgba(255, 255, 255, 0.85)";
+                tNode.style.letterSpacing = "2px";
+                tNode.style.pointerEvents = "none"; 
+                tNode.style.filter = "drop-shadow(0px 0px 5px rgba(255, 255, 255, 0.3))";
+
+                welcomeGroup.appendChild(tNode);
+            });
+
+            // Animate the entire welcome block to fade in alongside the menu
+            welcomeGroup.style.opacity = "0";
+            welcomeGroup.style.transform = "translateY(10px)";
+            welcomeGroup.style.animation = "fadeInWelcome 1.2s ease-out forwards";
+            welcomeGroup.style.animationDelay = "1.8s"; 
+
+            svg.appendChild(welcomeGroup);
 
             // ==========================================
             // 2. SLOW-MOTION DNA HELIX PHYSICS

@@ -77,3 +77,26 @@ body {
 .anchor-group:hover .anchor-line {
     stroke: rgba(255, 255, 255, 0.6);
 }
+
+/* Animation rule to dynamically draw SVG lines */
+@keyframes weaveLine {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Animation rule to smoothly fade and pop in text items */
+@keyframes fadeInText {
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Animation rule to smoothly fade and pop in welcome message */
+@keyframes fadeInWelcome {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
