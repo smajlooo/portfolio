@@ -1,0 +1,249 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | smajlooo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-[#050811] text-white min-h-screen relative overflow-x-hidden">
+    
+    <canvas id="dnaCanvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-0"></canvas>
+
+    <div class="relative z-10 min-h-screen flex items-center justify-center p-4">
+      <slot />
+    </div>
+
+    <script>
+      const canvas = document.getElementById('dnaCanvas') as HTMLCanvasElement;
+      if (canvas) {
+        const ctx = canvas.getContext('2d')!;
+        
+        let width = (canvas.width = window.innerWidth);
+        let height = (canvas.height = window.innerHeight);
+
+        window.addEventListener('resize', () => {
+          width = canvas.width = window.innerWidth;
+          height = canvas.height = window.innerHeight;
+          initStrands();
+        });
+
+        interface DNAStrand {
+          startX: number;
+          startY: number;
+          controlX: number;
+          controlY: number;
+          endX: number;
+          endY: number;
+          waveLength: number;
+          amplitude: number;
+          speed: number;
+          seed: number;
+          scaleFactor: number;
+          particleCount: number;
+          particles: Array<{
+            progress: number;
+            baseSize: number;
+            alphaOffset: number;
+            alphaSpeed: number;
+            noiseOffset: number;
+          }>;
+        }
+
+        let strands: DNAStrand[] = [];
+
+        // High-density blueprint layout featuring 12 strands to prevent empty spaces
+        const strandBlueprints = [
+          // 1. Top Corner Framing
+          { startX: -0.1, startY: 0.3,  controlX: 0.0,  controlY: 0.0,  endX: 0.3,  endY: -0.1, scale: 0.65 },
+          { startX: 0.7,  startY: -0.1, controlX: 1.0,  controlY: 0.0,  endX: 1.1,  endY: 0.3,  scale: 0.75 },
+          
+          // 2. Left Flank Cluster
+          { startX: -0.1, startY: 0.2,  controlX: 0.2,  controlY: 0.1,  endX: 0.6,  endY: -0.1, scale: 0.5 },  
+          { startX: -0.1, startY: 0.4,  controlX: 0.25, controlY: 0.7,  endX: 0.4,  endY: 1.1,  scale: 1.3 },  
+          
+          // 3. Right Flank & Base Cluster
+          { startX: 0.1,  startY: 1.1,  controlX: 0.5,  controlY: 0.8,  endX: 0.9,  endY: 1.1,  scale: 0.9 },  
+          { startX: 0.4,  startY: -0.1, controlX: 0.7,  controlY: 0.3,  endX: 1.1,  endY: 0.1,  scale: 1.15 }, 
+          { startX: 0.6,  startY: 1.1,  controlX: 0.8,  controlY: 0.5,  endX: 1.1,  endY: 0.8,  scale: 0.75 }, 
+          { startX: -0.1, startY: 0.8,  controlX: 0.4,  controlY: 0.3,  endX: 1.1,  endY: 0.5,  scale: 0.45 }, 
+
+          // 4. Central Background Network (Subtly fills the middle area behind elements)
+          { startX: -0.1, startY: 0.1,  controlX: 0.5,  controlY: 0.5,  endX: 1.1,  endY: 0.9,  scale: 0.55 },
+          { startX: -0.1, startY: 0.9,  controlX: 0.5,  controlY: 0.4,  endX: 1.1,  endY: 0.2,  scale: 0.5 },
+          { startX: 0.2,  startY: -0.1, controlX: 0.5,  controlY: 0.2,  endX: 0.8,  endY: -0.1, scale: 0.4 },
+
+          // 5. Additional Diagonal Fillers
+          { startX: 1.1,  startY: 0.1,  controlX: 0.6,  controlY: 0.6,  endX: 0.1,  endY: 1.1,  scale: 0.6 },
+          { startX: -0.1, startY: 0.65, controlX: 0.5,  controlY: 0.8,  endX: 1.1,  endY: 0.65, scale: 0.45 },
+          { startX: 0.5,  startY: -0.1, controlX: 0.9,  controlY: 0.4,  endX: 0.7,  endY: 1.1,  scale: 0.5 }
+        ];
+
+        function initStrands() {
+          strands = [];
+          
+          strandBlueprints.forEach((bp, index) => {
+            const startX = bp.startX * width;
+            const startY = bp.startY * height;
+            const controlX = bp.controlX * width;
+            const controlY = bp.controlY * height;
+            const endX = bp.endX * width;
+            const endY = bp.endY * height;
+
+            const approximateLength = Math.hypot(endX - startX, endY - startY) * 1.2;
+            const particleCount = Math.floor((approximateLength / 3.2) * (bp.scale * 0.4 + 0.6)); 
+            const particles = [];
+
+            for (let i = 0; i < particleCount; i++) {
+              particles.push({
+                progress: i / particleCount,
+                baseSize: (Math.random() * 1.8 + 1.2) * bp.scale, 
+                alphaOffset: Math.random() * Math.PI * 2,
+                alphaSpeed: Math.random() * 0.015 + 0.005,
+                noiseOffset: Math.random() * Math.PI * 2
+              });
+            }
+
+            strands.push({
+              startX, startY, controlX, controlY, endX, endY,
+              waveLength: 0.022 + (index * 0.0015), 
+              amplitude: (32 + (index % 3) * 6) * bp.scale,     
+              speed: (0.004 + (index * 0.0008)) * (index % 2 === 0 ? 1 : -1),
+              seed: index * 45.3,
+              scaleFactor: bp.scale,
+              particleCount,
+              particles
+            });
+          });
+        }
+
+        initStrands();
+
+        let globalTime = 0;
+
+        function getBezierPoint(t: number, start: number, control: number, end: number): number {
+          return (1 - t) * (1 - t) * start + 2 * (1 - t) * t * control + t * t * end;
+        }
+
+        function getBezierTangent(t: number, start: number, control: number, end: number): number {
+          return 2 * (1 - t) * (control - start) + 2 * t * (end - control);
+        }
+
+        function drawNetwork() {
+          globalTime += 0.5;
+
+          for (let s of strands) {
+            const timeSeed = globalTime * 0.001 + s.seed;
+            const currentControlX = s.controlX + Math.sin(timeSeed) * 50;
+            const currentControlY = s.controlY + Math.cos(timeSeed * 1.2) * 50;
+
+            const helixRotation = globalTime * s.speed;
+
+            for (let i = 0; i < s.particleCount; i++) {
+              const p = s.particles[i];
+              const t = p.progress;
+
+              const currX = getBezierPoint(t, s.startX, currentControlX, s.endX);
+              const currY = getBezierPoint(t, s.startY, currentControlY, s.endY);
+
+              const tx = getBezierTangent(t, s.startX, currentControlX, s.endX);
+              const ty = getBezierTangent(t, s.startY, currentControlY, s.endY);
+              const tangentLength = Math.hypot(tx, ty);
+              
+              const perpX = -ty / tangentLength;
+              const perpY = tx / tangentLength;
+
+              const distAlongCurve = t * 1100;
+              const angleA = distAlongCurve * s.waveLength + helixRotation;
+              const angleB = angleA + Math.PI;
+
+              const particleNoise = Math.sin(globalTime * 0.03 + p.noiseOffset) * 4 * s.scaleFactor;
+
+              const offsetA = Math.sin(angleA) * s.amplitude + particleNoise;
+              const offsetB = Math.sin(angleB) * s.amplitude + particleNoise;
+
+              const ptAX = currX + perpX * offsetA;
+              const ptAY = currY + perpY * offsetA;
+              const ptBX = currX + perpX * offsetB;
+              const ptBY = currY + perpY * offsetB;
+
+              const zA = Math.cos(angleA);
+              const zB = Math.cos(angleB);
+
+              const sizeA = p.baseSize * (1 + zA * 0.4);
+              const sizeB = p.baseSize * (1 + zB * 0.4);
+
+              const alphaDepthModifier = 0.2 + (s.scaleFactor * 0.2); 
+              const alphaBase = Math.sin(globalTime * p.alphaSpeed + p.alphaOffset) * 0.12 + alphaDepthModifier;
+              const alphaA = alphaBase * (1 + zA * 0.3);
+              const alphaB = alphaBase * (1 + zB * 0.3);
+
+              // Render Particle A
+              ctx.beginPath();
+              ctx.arc(ptAX, ptAY, sizeA, 0, Math.PI * 2);
+              ctx.fillStyle = `rgba(245, 248, 255, ${alphaA})`;
+              if (zA > 0.4 && s.scaleFactor > 0.8) {
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+                ctx.shadowBlur = sizeA * 3;
+              } else {
+                ctx.shadowBlur = 0;
+              }
+              ctx.fill();
+
+              // Render Particle B
+              ctx.beginPath();
+              ctx.arc(ptBX, ptBY, sizeB, 0, Math.PI * 2);
+              ctx.fillStyle = `rgba(245, 248, 255, ${alphaB})`;
+              if (zB > 0.4 && s.scaleFactor > 0.8) {
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+                ctx.shadowBlur = sizeB * 3;
+              } else {
+                ctx.shadowBlur = 0;
+              }
+              ctx.fill();
+
+              // Render connecting cross-bridges
+              if (i % 5 === 0) {
+                ctx.beginPath();
+                ctx.moveTo(ptAX, ptAY);
+                ctx.lineTo(ptBX, ptBY);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${(1 - Math.abs(zA - zB) / 2) * 0.12 * s.scaleFactor})`;
+                ctx.lineWidth = 0.5 * s.scaleFactor;
+                ctx.stroke();
+              }
+            }
+          }
+          ctx.shadowBlur = 0;
+        }
+
+        function animate() {
+          ctx.clearRect(0, 0, width, height);
+          
+          // Radial background gradient to preserve the deep blue tech aesthetic
+          const gradient = ctx.createRadialGradient(width/2, height/2, 10, width/2, height/2, width);
+          gradient.addColorStop(0, '#152238');
+          gradient.addColorStop(1, '#050811');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, width, height);
+
+          drawNetwork();
+          requestAnimationFrame(animate);
+        }
+
+        animate();
+      }
+    </script>
+  </body>
+</html>

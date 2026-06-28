@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 body {
     margin: 0;
@@ -16,6 +14,6 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 1; /* Hinter dem Menü */
-    pointer-events: none; /* Maus-Klicks gehen durch das Canvas durch zum Menü */
+    z-index: 1; 
+    pointer-events: none; 
 }
