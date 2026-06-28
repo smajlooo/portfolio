@@ -9,6 +9,7 @@ You can visit the live website here: https://www.smajlo.com
 * Astro, Tailwind CSS
 * JavaScript
 * GitHub Pages (Hosting)
+* Web3Forms
 
 ## 📌 Features
 * Overview of my development projects
