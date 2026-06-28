@@ -48,6 +48,7 @@ const { title } = Astro.props;
           endX: number;
           endY: number;
           waveLength: number;
+          targetAmplitude: number;
           amplitude: number;
           speed: number;
           seed: number;
@@ -63,29 +64,20 @@ const { title } = Astro.props;
         }
 
         let strands: DNAStrand[] = [];
+        let introGrowth = 0;
 
-        // High-density blueprint layout featuring 12 strands to prevent empty spaces
         const strandBlueprints = [
-          // 1. Top Corner Framing
           { startX: -0.1, startY: 0.3,  controlX: 0.0,  controlY: 0.0,  endX: 0.3,  endY: -0.1, scale: 0.65 },
           { startX: 0.7,  startY: -0.1, controlX: 1.0,  controlY: 0.0,  endX: 1.1,  endY: 0.3,  scale: 0.75 },
-          
-          // 2. Left Flank Cluster
           { startX: -0.1, startY: 0.2,  controlX: 0.2,  controlY: 0.1,  endX: 0.6,  endY: -0.1, scale: 0.5 },  
           { startX: -0.1, startY: 0.4,  controlX: 0.25, controlY: 0.7,  endX: 0.4,  endY: 1.1,  scale: 1.3 },  
-          
-          // 3. Right Flank & Base Cluster
           { startX: 0.1,  startY: 1.1,  controlX: 0.5,  controlY: 0.8,  endX: 0.9,  endY: 1.1,  scale: 0.9 },  
           { startX: 0.4,  startY: -0.1, controlX: 0.7,  controlY: 0.3,  endX: 1.1,  endY: 0.1,  scale: 1.15 }, 
           { startX: 0.6,  startY: 1.1,  controlX: 0.8,  controlY: 0.5,  endX: 1.1,  endY: 0.8,  scale: 0.75 }, 
           { startX: -0.1, startY: 0.8,  controlX: 0.4,  controlY: 0.3,  endX: 1.1,  endY: 0.5,  scale: 0.45 }, 
-
-          // 4. Central Background Network (Subtly fills the middle area behind elements)
           { startX: -0.1, startY: 0.1,  controlX: 0.5,  controlY: 0.5,  endX: 1.1,  endY: 0.9,  scale: 0.55 },
           { startX: -0.1, startY: 0.9,  controlX: 0.5,  controlY: 0.4,  endX: 1.1,  endY: 0.2,  scale: 0.5 },
           { startX: 0.2,  startY: -0.1, controlX: 0.5,  controlY: 0.2,  endX: 0.8,  endY: -0.1, scale: 0.4 },
-
-          // 5. Additional Diagonal Fillers
           { startX: 1.1,  startY: 0.1,  controlX: 0.6,  controlY: 0.6,  endX: 0.1,  endY: 1.1,  scale: 0.6 },
           { startX: -0.1, startY: 0.65, controlX: 0.5,  controlY: 0.8,  endX: 1.1,  endY: 0.65, scale: 0.45 },
           { startX: 0.5,  startY: -0.1, controlX: 0.9,  controlY: 0.4,  endX: 0.7,  endY: 1.1,  scale: 0.5 }
@@ -93,6 +85,7 @@ const { title } = Astro.props;
 
         function initStrands() {
           strands = [];
+          introGrowth = 0;
           
           strandBlueprints.forEach((bp, index) => {
             const startX = bp.startX * width;
@@ -103,7 +96,9 @@ const { title } = Astro.props;
             const endY = bp.endY * height;
 
             const approximateLength = Math.hypot(endX - startX, endY - startY) * 1.2;
-            const particleCount = Math.floor((approximateLength / 3.2) * (bp.scale * 0.4 + 0.6)); 
+            
+            // PERFORMANCE OPTIMIZATION: Changed step size from 3.2 to 6.5 to drastically reduce node counts
+            const particleCount = Math.floor((approximateLength / 6.5) * (bp.scale * 0.4 + 0.6)); 
             const particles = [];
 
             for (let i = 0; i < particleCount; i++) {
@@ -119,7 +114,8 @@ const { title } = Astro.props;
             strands.push({
               startX, startY, controlX, controlY, endX, endY,
               waveLength: 0.022 + (index * 0.0015), 
-              amplitude: (32 + (index % 3) * 6) * bp.scale,     
+              targetAmplitude: (32 + (index % 3) * 6) * bp.scale,     
+              amplitude: 0, 
               speed: (0.004 + (index * 0.0008)) * (index % 2 === 0 ? 1 : -1),
               seed: index * 45.3,
               scaleFactor: bp.scale,
@@ -144,12 +140,20 @@ const { title } = Astro.props;
         function drawNetwork() {
           globalTime += 0.5;
 
+          if (introGrowth < 1) {
+            introGrowth += 0.012; // Slightly faster scaling transition
+            if (introGrowth > 1) introGrowth = 1;
+          }
+
+          // CRITICAL PERFORMANCE: Completely removed ctx.shadowBlur / ctx.shadowColor engine tasks!
+
           for (let s of strands) {
             const timeSeed = globalTime * 0.001 + s.seed;
             const currentControlX = s.controlX + Math.sin(timeSeed) * 50;
             const currentControlY = s.controlY + Math.cos(timeSeed * 1.2) * 50;
 
             const helixRotation = globalTime * s.speed;
+            s.amplitude = s.targetAmplitude * introGrowth;
 
             for (let i = 0; i < s.particleCount; i++) {
               const p = s.particles[i];
@@ -169,7 +173,7 @@ const { title } = Astro.props;
               const angleA = distAlongCurve * s.waveLength + helixRotation;
               const angleB = angleA + Math.PI;
 
-              const particleNoise = Math.sin(globalTime * 0.03 + p.noiseOffset) * 4 * s.scaleFactor;
+              const particleNoise = Math.sin(globalTime * 0.03 + p.noiseOffset) * 4 * s.scaleFactor * introGrowth;
 
               const offsetA = Math.sin(angleA) * s.amplitude + particleNoise;
               const offsetB = Math.sin(angleB) * s.amplitude + particleNoise;
@@ -186,7 +190,7 @@ const { title } = Astro.props;
               const sizeB = p.baseSize * (1 + zB * 0.4);
 
               const alphaDepthModifier = 0.2 + (s.scaleFactor * 0.2); 
-              const alphaBase = Math.sin(globalTime * p.alphaSpeed + p.alphaOffset) * 0.12 + alphaDepthModifier;
+              const alphaBase = (Math.sin(globalTime * p.alphaSpeed + p.alphaOffset) * 0.12 + alphaDepthModifier) * introGrowth;
               const alphaA = alphaBase * (1 + zA * 0.3);
               const alphaB = alphaBase * (1 + zB * 0.3);
 
@@ -194,44 +198,30 @@ const { title } = Astro.props;
               ctx.beginPath();
               ctx.arc(ptAX, ptAY, sizeA, 0, Math.PI * 2);
               ctx.fillStyle = `rgba(245, 248, 255, ${alphaA})`;
-              if (zA > 0.4 && s.scaleFactor > 0.8) {
-                ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
-                ctx.shadowBlur = sizeA * 3;
-              } else {
-                ctx.shadowBlur = 0;
-              }
               ctx.fill();
 
               // Render Particle B
               ctx.beginPath();
               ctx.arc(ptBX, ptBY, sizeB, 0, Math.PI * 2);
               ctx.fillStyle = `rgba(245, 248, 255, ${alphaB})`;
-              if (zB > 0.4 && s.scaleFactor > 0.8) {
-                ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
-                ctx.shadowBlur = sizeB * 3;
-              } else {
-                ctx.shadowBlur = 0;
-              }
               ctx.fill();
 
-              // Render connecting cross-bridges
-              if (i % 5 === 0) {
+              // Render connecting cross-bridges (reduced rendering impact to every 8th step)
+              if (i % 8 === 0 && introGrowth > 0.1) {
                 ctx.beginPath();
                 ctx.moveTo(ptAX, ptAY);
                 ctx.lineTo(ptBX, ptBY);
-                ctx.strokeStyle = `rgba(255, 255, 255, ${(1 - Math.abs(zA - zB) / 2) * 0.12 * s.scaleFactor})`;
+                ctx.strokeStyle = `rgba(255, 255, 255, ${(1 - Math.abs(zA - zB) / 2) * 0.12 * s.scaleFactor * introGrowth})`;
                 ctx.lineWidth = 0.5 * s.scaleFactor;
                 ctx.stroke();
               }
             }
           }
-          ctx.shadowBlur = 0;
         }
 
         function animate() {
           ctx.clearRect(0, 0, width, height);
           
-          // Radial background gradient to preserve the deep blue tech aesthetic
           const gradient = ctx.createRadialGradient(width/2, height/2, 10, width/2, height/2, width);
           gradient.addColorStop(0, '#152238');
           gradient.addColorStop(1, '#050811');
@@ -245,5 +235,6 @@ const { title } = Astro.props;
         animate();
       }
     </script>
+
   </body>
 </html>
