@@ -10,7 +10,7 @@ You can visit the live website here: https://www.smajlo.com
 * JavaScript
 * GitHub Pages (Hosting)
 * Web3Forms
-* Google Gemini
+* Google Gemini (AI Assistance)
 
 ## 📌 Features
 * Overview of my development projects
